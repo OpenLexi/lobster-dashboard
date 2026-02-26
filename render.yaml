@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: lobster-dashboard
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 8000
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:///./lobster.db
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: AGENT_NAME
+        value: Lobster
+      - key: AGENT_EMAIL
+        value: agent@lobster.local
+      - key: MONTHLY_BUDGET_USD
+        value: 500
+      - key: ENV
+        value: production

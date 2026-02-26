@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Task Board - Lobster Dashboard{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Task Board</h1>
+    <button class="btn btn-primary" onclick="showNewTaskModal()">+ New Task</button>
+</div>
+
+<div class="task-board">
+    {% for status_name, tasks in columns.items() %}
+    <div class="task-column" data-status="{{ status_name }}">
+        <div class="task-column-header">
+            <span>{{ status_name|title }}</span>
+            <span class="task-count">{{ tasks|length }}</span>
+        </div>
+        <div class="task-list" id="column-{{ status_name }}">
+            {% for task in tasks %}
+            <div class="task-card" data-task-id="{{ task.id }}" draggable="true">
+                <div class="task-title">{{ task.title }}</div>
+                {% if task.description %}
+                <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0.5rem 0;">{{ task.description }}</p>
+                {% endif %}
+                <div class="task-meta">
+                    <span class="tag">{{ task.project }}</span>
+                    <span class="tag priority-{{ task.priority }}">{{ task.priority|title }}</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">
+                        {{ task.created_at.strftime('%Y-%m-%d') }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="modal-overlay" id="newTaskModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Create New Task</h2>
+            <button class="modal-close" onclick="hideNewTaskModal()">&times;</button>
+        </div>
+        <form id="newTaskForm" onsubmit="createTask(event)">
+            <div class="form-group">
+                <label for="title">Title *</label>
+                <input type="text" id="title" name="title" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="project">Project</label>
+                <input type="text" id="project" name="project" class="form-control" value="General">
+            </div>
+            <div class="form-group">
+                <label for="priority">Priority</label>
+                <select id="priority" name="priority" class="form-control">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary">Create Task</button>
+                <button type="button" class="btn btn-secondary" onclick="hideNewTaskModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Sortable for each column
+    const columns = document.querySelectorAll('.task-list');
+    columns.forEach(column => {
+        new Sortable(column, {
+            group: 'tasks',
+            animation: 150,
+            ghostClass: 'dragging',
+            onEnd: function(evt) {
+                const taskId = evt.item.dataset.taskId;
+                const newStatus = evt.to.parentElement.dataset.status;
+                
+                fetch(`/api/tasks/${taskId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        status: newStatus
+                    })
+                }).then(response => {
+                    if (!response.ok) {
+                        console.error('Failed to update task');
+                        // Revert the drag
+                        evt.from.appendChild(evt.item);
+                    }
+                });
+            }
+        });
+    });
+});
+
+function showNewTaskModal() {
+    document.getElementById('newTaskModal').classList.add('active');
+}
+
+function hideNewTaskModal() {
+    document.getElementById('newTaskModal').classList.remove('active');
+    document.getElementById('newTaskForm').reset();
+}
+
+function createTask(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const data = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        project: formData.get('project'),
+        priority: formData.get('priority')
+    };
+    
+    fetch('/api/tasks', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    }).then(response => {
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Failed to create task');
+        }
+    }).catch(error => {
+        console.error('Error:', error);
+        alert('Failed to create task');
+    });
+}
+</script>
+{% endblock %}

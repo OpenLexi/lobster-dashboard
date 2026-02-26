@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Lobster Dashboard{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="agent-card card">
+    <div class="agent-avatar">{{ agent.agent_name[0] }}</div>
+    <div class="agent-info">
+        <h2>{{ agent.agent_name }}</h2>
+        <p>{{ agent.agent_email }}</p>
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span>Last active: {{ agent.last_heartbeat_human }}</span>
+        </div>
+    </div>
+</div>
+
+{% if budget_critical %}
+<div class="alert alert-danger">
+    ⚠️ Monthly budget critical: {{ budget_percent }}% used
+</div>
+{% elif budget_warning %}
+<div class="alert alert-warning">
+    ⚠️ Monthly budget warning: {{ budget_percent }}% used
+</div>
+{% endif %}
+
+<div class="grid">
+    <div class="card">
+        <div class="card-title">Proposed Tasks</div>
+        <div class="card-value">{{ task_stats.proposed }}</div>
+    </div>
+    <div class="card">
+        <div class="card-title">In Progress</div>
+        <div class="card-value">{{ task_stats.in_progress }}</div>
+    </div>
+    <div class="card">
+        <div class="card-title">Done</div>
+        <div class="card-value">{{ task_stats.done }}</div>
+    </div>
+    <div class="card">
+        <div class="card-title">Today's Spend</div>
+        <div class="card-value">${{ "%.2f"|format(token_stats.total_cost) }}</div>
+    </div>
+</div>
+
+<div class="budget-section">
+    <div class="budget-header">
+        <span>Monthly Budget: ${{ "%.0f"|format(monthly_budget) }}</span>
+        <span>${{ "%.2f"|format(budget_used) }} ({{ "%.1f"|format(budget_percent) }}%)</span>
+    </div>
+    <div class="budget-bar">
+        <div class="budget-fill {{ 'critical' if budget_critical else 'warning' if budget_warning else '' }}" 
+             style="width: {{ min(budget_percent, 100) }}%"></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">Daily Token Spend (30 Days)</div>
+    <div class="chart-container">
+        <canvas id="spendChart"></canvas>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">Cost by Model</div>
+    <div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Model</th>
+                    <th>Input Tokens</th>
+                    <th>Output Tokens</th>
+                    <th>Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for model, data in token_stats.by_model.items() %}
+                <tr>
+                    <td>{{ model }}</td>
+                    <td>{{ "{:,}".format(data.input) }}</td>
+                    <td>{{ "{:,}".format(data.output) }}</td>
+                    <td>${{ "%.4f"|format(data.cost) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dailyData = {{ token_stats.daily|tojson }};
+    const days = Object.keys(dailyData).sort();
+    const costs = days.map(day => dailyData[day]);
+    
+    const ctx = document.getElementById('spendChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: days,
+            datasets: [{
+                label: 'Daily Cost ($)',
+                data: costs,
+                borderColor: '#ff6b6b',
+                backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(2);
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#e0e0e0'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

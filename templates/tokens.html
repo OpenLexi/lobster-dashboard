@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Token Tracker - Lobster Dashboard{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 2rem;">Token & Cost Tracker</h1>
+
+{% if budget_critical %}
+<div class="alert alert-danger">
+    ⚠️ Monthly budget critical: {{ budget_percent }}% used
+</div>
+{% elif budget_warning %}
+<div class="alert alert-warning">
+    ⚠️ Monthly budget warning: {{ budget_percent }}% used
+</div>
+{% endif %}
+
+<div class="grid" style="margin-bottom: 2rem;">
+    <div class="card">
+        <div class="card-title">Total Tokens Used</div>
+        <div class="card-value">{{ "{:,}".format(stats.total_input + stats.total_output) }}</div>
+    </div>
+    <div class="card">
+        <div class="card-title">Input Tokens</div>
+        <div class="card-value">{{ "{:,}".format(stats.total_input) }}</div>
+    </div>
+    <div class="card">
+        <div class="card-title">Output Tokens</div>
+        <div class="card-value">{{ "{:,}".format(stats.total_output) }}</div>
+    </div>
+    <div class="card">
+        <div class="card-title">Total Cost</div>
+        <div class="card-value">${{ "%.2f"|format(stats.total_cost) }}</div>
+    </div>
+</div>
+
+<div class="budget-section">
+    <div class="budget-header">
+        <span>Monthly Budget: ${{ "%.0f"|format(monthly_budget) }}</span>
+        <span>${{ "%.2f"|format(budget_used) }} ({{ "%.1f"|format(budget_percent) }}%)</span>
+    </div>
+    <div class="budget-bar">
+        <div class="budget-fill {{ 'critical' if budget_critical else 'warning' if budget_warning else '' }}" 
+             style="width: {{ min(budget_percent, 100) }}%"></div>
+    </div>
+</div>
+
+<div class="card" style="margin: 2rem 0;">
+    <div class="card-title">Cost Breakdown by Model</div>
+    <div class="chart-container">
+        <canvas id="modelChart"></canvas>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-title">Daily Token Spend (30 Days)</div>
+    <div class="chart-container">
+        <canvas id="dailyChart"></canvas>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">Recent Token Usage</div>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Model</th>
+                    <th>Input Tokens</th>
+                    <th>Output Tokens</th>
+                    <th>Cost</th>
+                    <th>Session</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ log.model }}</td>
+                    <td>{{ "{:,}".format(log.input_tokens) }}</td>
+                    <td>{{ "{:,}".format(log.output_tokens) }}</td>
+                    <td>${{ "%.6f"|format(log.cost_usd) }}</td>
+                    <td style="font-size: 0.75rem; color: var(--text-muted);">{{ log.session_id[:8] if log.session_id else '' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Model breakdown chart
+    const modelData = {{ stats.by_model|tojson }};
+    const models = Object.keys(modelData);
+    const modelCosts = models.map(model => modelData[model].cost);
+    
+    const modelCtx = document.getElementById('modelChart').getContext('2d');
+    new Chart(modelCtx, {
+        type: 'doughnut',
+        data: {
+            labels: models,
+            datasets: [{
+                data: modelCosts,
+                backgroundColor: [
+                    '#ff6b6b',
+                    '#ffd93d',
+                    '#51cf66',
+                    '#339af0',
+                    '#cc5de8'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        color: '#e0e0e0'
+                    }
+                }
+            }
+        }
+    });
+    
+    // Daily spend chart
+    const dailyData = {{ stats.daily|tojson }};
+    const days = Object.keys(dailyData).sort();
+    const dailyCosts = days.map(day => dailyData[day]);
+    
+    const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+    new Chart(dailyCtx, {
+        type: 'bar',
+        data: {
+            labels: days,
+            datasets: [{
+                label: 'Daily Cost ($)',
+                data: dailyCosts,
+                backgroundColor: '#ff6b6b',
+                borderColor: '#ff6b6b',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(2);
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#e0e0e0'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
