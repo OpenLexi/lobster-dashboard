@@ -1,6 +1,7 @@
 """Lobster Dashboard - Main FastAPI application."""
 from datetime import datetime, timedelta
 from typing import Optional, List
+import os
 
 from fastapi import FastAPI, Request, Response, Depends, HTTPException, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
@@ -291,4 +292,9 @@ def token_summary_api(db: Session = Depends(get_db), user: str = Depends(get_cur
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Get port from environment variable (Render sets this) or default to 8000
+    port = int(os.getenv("PORT", 8000))
+    print(f"Starting Lobster Dashboard on port {port}")
+    print(f"Host: 0.0.0.0")
+    uvicorn.run(app, host="0.0.0.0", port=port)
+EOF
