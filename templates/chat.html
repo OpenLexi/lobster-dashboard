@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Chat - Lobster Dashboard{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1rem;">Jesse ↔ Lexi Chat</h1>
+
+<div class="card" style="margin-bottom: 1rem;">
+    <div id="chat-log" style="max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: .5rem;">
+        {% for m in messages %}
+        <div style="padding:.6rem .75rem; background:#1f2937; border-radius:.5rem;">
+            <div style="font-size:.8rem; color:#9ca3af; margin-bottom:.2rem;">{{ m.sender }} · {{ m.created_at[:19].replace('T',' ') }}</div>
+            <div>{{ m.body }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <form id="chat-form" style="display:grid; gap:.6rem;">
+        <div style="display:flex; gap:.6rem;">
+            <input id="sender" value="Jesse" style="max-width: 180px;" />
+            <input id="body" placeholder="Type a message..." required style="flex:1;" />
+            <button type="submit">Send</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const form = document.getElementById('chat-form');
+const log = document.getElementById('chat-log');
+
+function renderMessage(m) {
+  const box = document.createElement('div');
+  box.style.padding = '.6rem .75rem';
+  box.style.background = '#1f2937';
+  box.style.borderRadius = '.5rem';
+
+  const meta = document.createElement('div');
+  meta.style.fontSize = '.8rem';
+  meta.style.color = '#9ca3af';
+  meta.style.marginBottom = '.2rem';
+  meta.textContent = `${m.sender} · ${m.created_at.replace('T', ' ').slice(0, 19)}`;
+
+  const body = document.createElement('div');
+  body.textContent = m.body;
+
+  box.appendChild(meta);
+  box.appendChild(body);
+  log.appendChild(box);
+  log.scrollTop = log.scrollHeight;
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const sender = document.getElementById('sender').value || 'Jesse';
+  const bodyEl = document.getElementById('body');
+  const body = bodyEl.value.trim();
+  if (!body) return;
+
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sender, body })
+  });
+
+  if (res.ok) {
+    const msg = await res.json();
+    renderMessage(msg);
+    bodyEl.value = '';
+    bodyEl.focus();
+  }
+});
+
+log.scrollTop = log.scrollHeight;
+</script>
+{% endblock %}

@@ -15,7 +15,7 @@ from pydantic import BaseModel
 
 import database
 from database import get_db, init_db
-from models import Task, TaskStatus, TokenLog, AgentStatus, Project
+from models import Task, TaskStatus, TokenLog, AgentStatus, Project, ChatMessage
 from auth import authenticate_user, create_session, clear_session, get_current_user
 from config import AGENT_NAME, AGENT_EMAIL, MONTHLY_BUDGET_USD, DEBUG
 
@@ -60,6 +60,11 @@ class TokenLogCreate(BaseModel):
 class HeartbeatCreate(BaseModel):
     agent_name: Optional[str] = None
     agent_email: Optional[str] = None
+
+
+class ChatCreate(BaseModel):
+    sender: str = "Jesse"
+    body: str
 
 
 # Cost calculation
@@ -306,6 +311,16 @@ def project_detail_page(project_id: str, request: Request, db: Session = Depends
     })
 
 
+@app.get("/chat", response_class=HTMLResponse)
+def chat_page(request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+    """Internal chat page for Jesse + Lexi."""
+    messages = db.query(ChatMessage).order_by(ChatMessage.created_at.asc()).limit(200).all()
+    return templates.TemplateResponse("chat.html", {
+        "request": request,
+        "messages": [m.to_dict() for m in messages],
+    })
+
+
 # API routes
 @app.post("/api/tasks")
 def create_task_api(task: TaskCreate, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
@@ -394,6 +409,28 @@ def token_summary_api(db: Session = Depends(get_db), user: str = Depends(get_cur
 def gateway_status_api(user: str = Depends(get_current_user)):
     """Expose configured OpenClaw gateway status for dashboard monitoring."""
     return get_gateway_status()
+
+
+@app.get("/api/chat")
+def list_chat_api(db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+    """List recent chat messages."""
+    messages = db.query(ChatMessage).order_by(ChatMessage.created_at.asc()).limit(200).all()
+    return [m.to_dict() for m in messages]
+
+
+@app.post("/api/chat")
+def create_chat_api(data: ChatCreate, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+    """Create chat message."""
+    body = (data.body or "").strip()
+    sender = (data.sender or "Jesse").strip()[:40]
+    if not body:
+        raise HTTPException(status_code=400, detail="Message body is required")
+
+    msg = ChatMessage(sender=sender, body=body[:4000])
+    db.add(msg)
+    db.commit()
+    db.refresh(msg)
+    return msg.to_dict()
 
 
 if __name__ == "__main__":
