@@ -32,6 +32,7 @@
                     <span style="font-size: 0.75rem; color: var(--text-muted);">
                         {{ task.created_at.strftime('%Y-%m-%d') }}
                     </span>
+                    <button class="btn btn-secondary" style="margin-left:auto; padding:0.15rem 0.4rem; font-size:.75rem;" onclick="deleteTask({{ task.id }}, event)">Delete</button>
                 </div>
             </div>
             {% endfor %}
@@ -121,7 +122,7 @@ function hideNewTaskModal() {
 
 function createTask(event) {
     event.preventDefault();
-    
+
     const formData = new FormData(event.target);
     const data = {
         title: formData.get('title'),
@@ -129,7 +130,7 @@ function createTask(event) {
         project: formData.get('project'),
         priority: formData.get('priority')
     };
-    
+
     fetch('/api/tasks', {
         method: 'POST',
         headers: {
@@ -146,6 +147,25 @@ function createTask(event) {
         console.error('Error:', error);
         alert('Failed to create task');
     });
+}
+
+function deleteTask(taskId, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!confirm('Delete this task?')) return;
+
+    fetch(`/api/tasks/${taskId}`, { method: 'DELETE' })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Failed to delete task');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to delete task');
+        });
 }
 </script>
 {% endblock %}

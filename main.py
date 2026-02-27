@@ -171,6 +171,29 @@ def ensure_seed_projects(db: Session):
     db.commit()
 
 
+def ensure_seed_tasks(db: Session):
+    """Load initial task backlog from tasks_seed.json if tasks are empty."""
+    if db.query(Task).count() > 0:
+        return
+
+    seed_path = os.path.join(os.path.dirname(__file__), "tasks_seed.json")
+    if not os.path.exists(seed_path):
+        return
+
+    with open(seed_path, "r", encoding="utf-8") as f:
+        seed_tasks = json.load(f)
+
+    for item in seed_tasks:
+        db.add(Task(
+            title=item["title"],
+            description=item.get("description", ""),
+            project=item.get("project", "General"),
+            priority=item.get("priority", "medium"),
+            status=item.get("status", TaskStatus.PROPOSED),
+        ))
+    db.commit()
+
+
 def get_gateway_status() -> dict:
     """Best-effort OpenClaw gateway status using configured URL/token."""
     if not GATEWAY_URL:
@@ -223,6 +246,7 @@ def logout():
 def dashboard(request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
     """Dashboard home."""
     ensure_seed_projects(db)
+    ensure_seed_tasks(db)
     agent_status = get_agent_status(db)
     task_stats = get_task_stats(db)
     token_stats = get_token_stats(db, days=30)
@@ -247,6 +271,7 @@ def dashboard(request: Request, db: Session = Depends(get_db), user: str = Depen
 @app.get("/tasks", response_class=HTMLResponse)
 def tasks_page(request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
     """Task board page."""
+    ensure_seed_tasks(db)
     tasks = db.query(Task).all()
     
     # Group by status
@@ -361,6 +386,17 @@ def list_tasks_api(db: Session = Depends(get_db), user: str = Depends(get_curren
     """List all tasks."""
     tasks = db.query(Task).all()
     return [task.to_dict() for task in tasks]
+
+
+@app.delete("/api/tasks/{task_id}")
+def delete_task_api(task_id: int, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+    """Delete a task."""
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    db.delete(task)
+    db.commit()
+    return {"ok": True, "deleted_id": task_id}
 
 
 @app.post("/api/heartbeat")

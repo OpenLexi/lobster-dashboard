@@ -1,0 +1,181 @@
+[
+  {
+    "title": "MedicaidHQ: Merge-state audit and release baseline",
+    "description": "Reconcile main vs feature branches and lock release branch with agreed form set.",
+    "project": "MedicaidHQ",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "MedicaidHQ: Fix cover-letter income-rule test failures",
+    "description": "Resolve failing expectations and align with policy signoff.",
+    "project": "MedicaidHQ",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "MedicaidHQ: Unskip intake-preservation integration tests",
+    "description": "Ensure intake saves do not wipe bank_analysis data.",
+    "project": "MedicaidHQ",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "MedicaidHQ: Client portal invite stability pass",
+    "description": "20-run test across invite/account/login/case linkage, target >=95% success.",
+    "project": "MedicaidHQ",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "MedicaidHQ: Pooled trust UAT with real case",
+    "description": "Field-by-field validation of Joinder + SCS forms.",
+    "project": "MedicaidHQ",
+    "priority": "high",
+    "status": "proposed"
+  },
+
+  {
+    "title": "NurseBillHQ: Fix fs copy IPC bug",
+    "description": "Correct copyToCase/copyFileToCase mismatch and add regression test.",
+    "project": "NurseBillHQ",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "NurseBillHQ: Beta hardening QA pass",
+    "description": "Run critical-flow checklist with evidence and blocker triage.",
+    "project": "NurseBillHQ",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "NurseBillHQ: Create beta tester script and feedback form",
+    "description": "Enable unaided friend testing with clear pass/fail steps.",
+    "project": "NurseBillHQ",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "NurseBillHQ: Package/sign/notarize mac builds",
+    "description": "Validate clean install on Intel and Apple Silicon.",
+    "project": "NurseBillHQ",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "NurseBillHQ: Add backup/restore UX",
+    "description": "Export/import app data with full restore test under 5 minutes.",
+    "project": "NurseBillHQ",
+    "priority": "medium",
+    "status": "proposed"
+  },
+
+  {
+    "title": "Piecerie: Implement Stripe subscriptions",
+    "description": "Monthly/annual Pro with webhook-driven entitlement updates.",
+    "project": "Piecerie",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "Piecerie: Replace hardcoded Pro gating",
+    "description": "Move to DB-backed entitlement checks and upgrade prompts.",
+    "project": "Piecerie",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "Piecerie: Build billing settings page",
+    "description": "Show plan status, invoice history, cancel/reactivate controls.",
+    "project": "Piecerie",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "Piecerie: PDF QA matrix and golden outputs",
+    "description": "Validate templates on realistic datasets and prevent layout regressions.",
+    "project": "Piecerie",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "Piecerie: Remove orphan CatalogTemplate.tsx",
+    "description": "Clean dead references and keep TS build error-free.",
+    "project": "Piecerie",
+    "priority": "medium",
+    "status": "proposed"
+  },
+
+  {
+    "title": "Estate Planning Tool: Lock down privileged API routes",
+    "description": "Require auth/admin for setup/seed/storage privileged endpoints.",
+    "project": "Estate Planning Tool",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "Estate Planning Tool: Enforce document download authorization",
+    "description": "Validate user + matter ownership before storage access.",
+    "project": "Estate Planning Tool",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "Estate Planning Tool: Enable and verify Supabase RLS",
+    "description": "Policy tests for allow/deny across matter tables and storage.",
+    "project": "Estate Planning Tool",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "Estate Planning Tool: Add Clio OAuth state validation",
+    "description": "Protect callback against CSRF and handle invalid state cleanly.",
+    "project": "Estate Planning Tool",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "Estate Planning Tool: Verify Lawmatics webhook signatures",
+    "description": "Reject unsigned/invalid webhook payloads and redact sensitive logs.",
+    "project": "Estate Planning Tool",
+    "priority": "high",
+    "status": "proposed"
+  },
+
+  {
+    "title": "Report with Clio: Remove hardcoded token and rotate secrets",
+    "description": "Purge exposed credentials and enforce env-only secret handling.",
+    "project": "Report with Clio",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "Report with Clio: Harden OAuth (state + errors)",
+    "description": "Add state generation/verification and robust callback failures.",
+    "project": "Report with Clio",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "Report with Clio: Replace URL/localStorage token handling",
+    "description": "Use secure server sessions + HttpOnly cookies.",
+    "project": "Report with Clio",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "Report with Clio: Build mapping test harness",
+    "description": "Fixture-based tests for canonical Clio field mapping outputs.",
+    "project": "Report with Clio",
+    "priority": "high",
+    "status": "proposed"
+  },
+  {
+    "title": "Report with Clio: Tax engine domain QA with Jesse",
+    "description": "Review assumptions and approve scenario test pack.",
+    "project": "Report with Clio",
+    "priority": "medium",
+    "status": "proposed"
+  }
+]
