@@ -23,6 +23,12 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
+@app.get("/health")
+def health_check():
+    """Render health check endpoint (no auth required)."""
+    return {"status": "ok"}
+
+
 # Pydantic models
 class TaskCreate(BaseModel):
     title: str
