@@ -9,6 +9,8 @@
     <div class="card-title">Mentor-in-Residence Monitoring</div>
     {% if gateway.ok %}
     <div style="color: #22c55e; font-weight: 600;">Gateway connected</div>
+    {% elif gateway.reason == 'OPENCLAW_GATEWAY_URL not set' %}
+    <div style="color: #6b7280; font-weight: 600;">Gateway monitoring is off (set OPENCLAW_GATEWAY_URL to enable).</div>
     {% else %}
     <div style="color: #f59e0b; font-weight: 600;">Gateway status unavailable: {{ gateway.reason }}</div>
     {% endif %}
