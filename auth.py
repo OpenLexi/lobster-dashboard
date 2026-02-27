@@ -27,7 +27,7 @@ def create_session(response: Response, user_id: str = "admin"):
         token,
         max_age=SESSION_MAX_AGE,
         httponly=True,
-        secure=False,  # Set to True in production with HTTPS
+        secure=True,  # Set to True in production with HTTPS
         samesite="lax"
     )
 
