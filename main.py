@@ -137,19 +137,21 @@ def login_page(request: Request):
 
 
 @app.post("/login")
-def login_submit(request: Request, response: Response, password: str = Form(...)):
+def login_submit(request: Request, password: str = Form(...)):
     """Handle login."""
     if authenticate_user(password):
+        response = RedirectResponse(url="/", status_code=302)
         create_session(response)
-        return RedirectResponse(url="/", status_code=302)
+        return response
     return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid password"})
 
 
 @app.get("/logout")
-def logout(response: Response):
+def logout():
     """Logout."""
+    response = RedirectResponse(url="/login", status_code=302)
     clear_session(response)
-    return RedirectResponse(url="/login", status_code=302)
+    return response
 
 
 @app.get("/", response_class=HTMLResponse)

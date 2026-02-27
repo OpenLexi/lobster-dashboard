@@ -39,10 +39,14 @@ def clear_session(response: Response):
 
 def get_current_user(request: Request) -> str:
     """Get current user from session cookie."""
+    # Dev/fallback mode: if no admin password is configured, bypass auth.
+    if not ADMIN_PASSWORD_HASH:
+        return "admin"
+
     token = request.cookies.get(SESSION_COOKIE_NAME)
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    
+
     try:
         data = serializer.loads(token, max_age=SESSION_MAX_AGE)
         return data.get("user_id")
