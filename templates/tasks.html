@@ -99,12 +99,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: JSON.stringify({
                         status: newStatus
                     })
-                }).then(response => {
+                }).then(async response => {
                     if (!response.ok) {
-                        console.error('Failed to update task');
+                        const txt = await response.text();
+                        console.error('Failed to update task', response.status, txt);
+                        alert(`Task update failed (${response.status}). ${txt.slice(0, 140)}`);
                         // Revert the drag
                         evt.from.appendChild(evt.item);
                     }
+                }).catch(err => {
+                    console.error('Task update error', err);
+                    alert(`Task update error: ${err.message}`);
+                    evt.from.appendChild(evt.item);
                 });
             }
         });
