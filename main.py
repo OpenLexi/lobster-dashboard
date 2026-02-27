@@ -359,7 +359,7 @@ def chat_page(request: Request, db: Session = Depends(get_db)):
 
 # API routes
 @app.post("/api/tasks")
-def create_task_api(task: TaskCreate, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+def create_task_api(task: TaskCreate, db: Session = Depends(get_db)):
     """Create a new task."""
     db_task = Task(
         title=task.title,
@@ -375,7 +375,7 @@ def create_task_api(task: TaskCreate, db: Session = Depends(get_db), user: str =
 
 
 @app.patch("/api/tasks/{task_id}")
-def update_task_api(task_id: int, update: TaskUpdate, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+def update_task_api(task_id: int, update: TaskUpdate, db: Session = Depends(get_db)):
     """Update task status or notes."""
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
@@ -393,14 +393,14 @@ def update_task_api(task_id: int, update: TaskUpdate, db: Session = Depends(get_
 
 
 @app.get("/api/tasks")
-def list_tasks_api(db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+def list_tasks_api(db: Session = Depends(get_db)):
     """List all tasks."""
     tasks = db.query(Task).all()
     return [task.to_dict() for task in tasks]
 
 
 @app.delete("/api/tasks/{task_id}")
-def delete_task_api(task_id: int, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+def delete_task_api(task_id: int, db: Session = Depends(get_db)):
     """Delete a task."""
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
@@ -447,7 +447,7 @@ def log_tokens_api(data: TokenLogCreate, db: Session = Depends(get_db)):
 
 
 @app.get("/api/tokens/summary")
-def token_summary_api(db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+def token_summary_api(db: Session = Depends(get_db)):
     """Get token usage summary."""
     return get_token_stats(db, days=30)
 
