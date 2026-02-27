@@ -9,6 +9,12 @@
 {% block content %}
 <h1 style="margin-bottom: 2rem;">Token & Cost Tracker</h1>
 
+{% if stats.count == 0 %}
+<div class="alert alert-warning">
+    No token logs yet. The dashboard is ready, but it needs a data source posting to <code>/api/tokens/log</code>.
+</div>
+{% endif %}
+
 {% if budget_critical %}
 <div class="alert alert-danger">
     ⚠️ Monthly budget critical: {{ budget_percent }}% used
