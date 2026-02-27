@@ -337,7 +337,7 @@ def project_detail_page(project_id: str, request: Request, db: Session = Depends
 
 
 @app.get("/chat", response_class=HTMLResponse)
-def chat_page(request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+def chat_page(request: Request, db: Session = Depends(get_db)):
     """Internal chat page for Jesse + Lexi."""
     messages = db.query(ChatMessage).order_by(ChatMessage.created_at.asc()).limit(200).all()
     return templates.TemplateResponse("chat.html", {
@@ -448,14 +448,14 @@ def gateway_status_api(user: str = Depends(get_current_user)):
 
 
 @app.get("/api/chat")
-def list_chat_api(db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+def list_chat_api(db: Session = Depends(get_db)):
     """List recent chat messages."""
     messages = db.query(ChatMessage).order_by(ChatMessage.created_at.asc()).limit(200).all()
     return [m.to_dict() for m in messages]
 
 
 @app.post("/api/chat")
-def create_chat_api(data: ChatCreate, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+def create_chat_api(data: ChatCreate, db: Session = Depends(get_db)):
     """Create chat message."""
     body = (data.body or "").strip()
     sender = (data.sender or "Jesse").strip()[:40]
