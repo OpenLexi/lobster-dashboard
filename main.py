@@ -69,12 +69,23 @@ class ChatCreate(BaseModel):
 
 # Cost calculation
 MODEL_RATES = {
+    # Anthropic
     "claude-opus-4-5": {"input": 5.0, "output": 25.0},
     "claude-sonnet-4-5": {"input": 3.0, "output": 15.0},
     "claude-haiku-4-5": {"input": 1.0, "output": 5.0},
+    "anthropic/claude-opus-4-5": {"input": 5.0, "output": 25.0},
+    "anthropic/claude-sonnet-4-5": {"input": 3.0, "output": 15.0},
+    "anthropic/claude-haiku-4-5": {"input": 1.0, "output": 5.0},
+
+    # DeepSeek
     "deepseek": {"input": 0.27, "output": 1.10},
     "deepseek-chat": {"input": 0.27, "output": 1.10},
     "openrouter/deepseek": {"input": 0.27, "output": 1.10},
+
+    # Codex (user-defined as free)
+    "openai-codex/gpt-5.3-codex": {"input": 0.0, "output": 0.0},
+    "gpt-5.3-codex": {"input": 0.0, "output": 0.0},
+    "codex": {"input": 0.0, "output": 0.0},
 }
 
 
