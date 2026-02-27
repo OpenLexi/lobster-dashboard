@@ -21,6 +21,8 @@ database.Base.metadata.create_all(bind=database.engine)
 app = FastAPI(title="Lobster Dashboard", debug=DEBUG)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+templates.env.globals["min"] = min
+templates.env.globals["max"] = max
 
 
 @app.get("/health")
