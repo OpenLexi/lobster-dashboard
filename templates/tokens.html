@@ -41,7 +41,7 @@
 <div class="budget-section">
     <div class="budget-header">
         <span>Monthly Budget: ${{ "%.0f"|format(monthly_budget) }}</span>
-        <span>${{ "%.2f"|format(budget_used) }} ({{ "%.1f"|format(budget_percent) }}%)</span>
+        <span>${{ "%.2f"|format(stats.total_cost) }} ({{ "%.1f"|format(budget_percent) }}%)</span>
     </div>
     <div class="budget-bar">
         <div class="budget-fill {{ 'critical' if budget_critical else 'warning' if budget_warning else '' }}" 
