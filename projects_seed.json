@@ -1,0 +1,67 @@
+[
+  {
+    "id": "medicaidhq",
+    "name": "MedicaidHQ",
+    "repo": "Medicaid-Place",
+    "color": "#3b82f6",
+    "status": "in-progress",
+    "priority": "high",
+    "purpose": "Automate Medicaid and pooled trust workflows, form generation, and client-facing case operations.",
+    "tech_stack": "React, TypeScript, Supabase, PDF form tooling",
+    "todo_list": "Test pooled trust joinder mappings\nClient portal invite stability pass\nFinish missing PDF templates research",
+    "notes": "Closest to done. Core priority project.",
+    "memory_file": "memory/medicaidhq.md"
+  },
+  {
+    "id": "nursebillhq",
+    "name": "NurseBillHQ",
+    "repo": "nursebillhq",
+    "color": "#10b981",
+    "status": "beta",
+    "priority": "medium",
+    "purpose": "Nursing bill workflow and billing support app, currently in beta readiness.",
+    "tech_stack": "Web app stack (TBD)",
+    "todo_list": "Run beta with friend tester\nCollect first bug list",
+    "notes": "Marked done and ready for beta.",
+    "memory_file": "memory/nursebillhq.md"
+  },
+  {
+    "id": "piecerie",
+    "name": "Piecerie",
+    "repo": "piecerie",
+    "color": "#f59e0b",
+    "status": "in-progress",
+    "priority": "medium",
+    "purpose": "Art inventory system with export and marketplace workflows.",
+    "tech_stack": "React, TypeScript, Capacitor, Supabase",
+    "todo_list": "Design polish pass\nMobile UX polish\nEtsy integration once approved",
+    "notes": "Needs broad UX and architecture cleanup.",
+    "memory_file": "memory/piecerie.md"
+  },
+  {
+    "id": "estate-planning-tool",
+    "name": "Estate Planning Tool",
+    "repo": "Estate-Planning-Tool",
+    "color": "#8b5cf6",
+    "status": "messy",
+    "priority": "low",
+    "purpose": "Internal legal-tech support tooling for estate planning workflows.",
+    "tech_stack": "Supabase, Python, Web app",
+    "todo_list": "Refactor architecture\nDocument business rules",
+    "notes": "Business-critical but currently messy.",
+    "memory_file": "memory/estate-planning-tool.md"
+  },
+  {
+    "id": "report-with-clio",
+    "name": "Report with Clio",
+    "repo": "report-with-clio",
+    "color": "#ef4444",
+    "status": "planning",
+    "priority": "low",
+    "purpose": "Long-term Clio/WealthCounsel add-on for modern financial/legal reporting.",
+    "tech_stack": "Clio API, WealthCounsel integrations, Web app",
+    "todo_list": "Define MVP scope\nDesign data model for reports",
+    "notes": "Strategic long-term play.",
+    "memory_file": "memory/report-with-clio.md"
+  }
+]

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - Lobster Dashboard{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1rem;">Projects</h1>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-title">Mentor-in-Residence Monitoring</div>
+    {% if gateway.ok %}
+    <div style="color: #22c55e; font-weight: 600;">Gateway connected</div>
+    {% else %}
+    <div style="color: #f59e0b; font-weight: 600;">Gateway status unavailable: {{ gateway.reason }}</div>
+    {% endif %}
+</div>
+
+<div class="grid">
+    {% for p in projects %}
+    <a href="/projects/{{ p.id }}" class="card" style="text-decoration:none; color:inherit; border-left: 6px solid {{ p.color }};">
+        <div class="card-title">{{ p.name }}</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: .5rem;">{{ p.repo }}</div>
+        <div style="margin-bottom: .75rem;">{{ p.purpose }}</div>
+        <div style="font-size: 0.8rem; margin-bottom: .5rem;">
+            <strong>Status:</strong> {{ p.status }} · <strong>Priority:</strong> {{ p.priority }}
+        </div>
+        <div style="display:flex; gap:.35rem; flex-wrap:wrap; margin-bottom:.5rem;">
+            {% for tech in p.tech_stack %}
+            <span style="background:#1f2937; color:#d1d5db; padding:.15rem .4rem; border-radius:.35rem; font-size:.75rem;">{{ tech }}</span>
+            {% endfor %}
+        </div>
+        <div style="font-size:.85rem; color:var(--text-muted);">{{ p.todo_list|length }} todo item(s)</div>
+    </a>
+    {% endfor %}
+</div>
+{% endblock %}

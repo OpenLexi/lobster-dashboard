@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} - Lobster Dashboard{% endblock %}
+
+{% block content %}
+<a href="/projects" style="display:inline-block; margin-bottom:1rem;">← Back to Projects</a>
+<h1 style="margin-bottom: .5rem;">{{ project.name }}</h1>
+
+<div class="card" style="border-left: 6px solid {{ project.color }}; margin-bottom:1rem;">
+    <div class="card-title">Overview</div>
+    <p><strong>Repo:</strong> {{ project.repo }}</p>
+    <p><strong>Status:</strong> {{ project.status }} · <strong>Priority:</strong> {{ project.priority }}</p>
+    <p><strong>Purpose:</strong> {{ project.purpose }}</p>
+    <p><strong>Memory file:</strong> {{ project.memory_file or "(not set)" }}</p>
+    <div style="display:flex; gap:.35rem; flex-wrap:wrap; margin-top:.5rem;">
+        {% for tech in project.tech_stack %}
+        <span style="background:#1f2937; color:#d1d5db; padding:.15rem .4rem; border-radius:.35rem; font-size:.75rem;">{{ tech }}</span>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:1rem;">
+    <div class="card-title">To-do List</div>
+    {% if project.todo_list %}
+    <ul>
+        {% for item in project.todo_list %}
+        <li>{{ item }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div style="color:var(--text-muted);">No to-do items yet.</div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-title">Linked Dashboard Tasks</div>
+    {% if tasks %}
+    <ul>
+        {% for t in tasks %}
+        <li><strong>{{ t.title }}</strong> — {{ t.status }} ({{ t.priority }})</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div style="color:var(--text-muted);">No linked tasks yet.</div>
+    {% endif %}
+</div>
+{% endblock %}

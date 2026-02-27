@@ -2,6 +2,9 @@
 from datetime import datetime, timedelta
 from typing import Optional, List
 import os
+import json
+from urllib import request as urlrequest
+from urllib.error import URLError, HTTPError
 
 from fastapi import FastAPI, Request, Response, Depends, HTTPException, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
@@ -12,7 +15,7 @@ from pydantic import BaseModel
 
 import database
 from database import get_db, init_db
-from models import Task, TaskStatus, TokenLog, AgentStatus
+from models import Task, TaskStatus, TokenLog, AgentStatus, Project
 from auth import authenticate_user, create_session, clear_session, get_current_user
 from config import AGENT_NAME, AGENT_EMAIL, MONTHLY_BUDGET_USD, DEBUG
 
@@ -23,6 +26,9 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 templates.env.globals["min"] = min
 templates.env.globals["max"] = max
+
+GATEWAY_URL = os.getenv("OPENCLAW_GATEWAY_URL", "")
+GATEWAY_TOKEN = os.getenv("OPENCLAW_GATEWAY_TOKEN", "")
 
 
 @app.get("/health")
@@ -97,13 +103,13 @@ def get_task_stats(db: Session) -> dict:
 def get_token_stats(db: Session, days: int = 30) -> dict:
     """Get token usage statistics."""
     since = datetime.utcnow() - timedelta(days=days)
-    
+
     logs = db.query(TokenLog).filter(TokenLog.timestamp >= since).all()
-    
+
     total_input = sum(log.input_tokens for log in logs)
     total_output = sum(log.output_tokens for log in logs)
     total_cost = sum(log.cost_usd for log in logs)
-    
+
     # By model
     by_model = {}
     for log in logs:
@@ -112,7 +118,7 @@ def get_token_stats(db: Session, days: int = 30) -> dict:
         by_model[log.model]["input"] += log.input_tokens
         by_model[log.model]["output"] += log.output_tokens
         by_model[log.model]["cost"] += log.cost_usd
-    
+
     # Daily breakdown
     daily = {}
     for log in logs:
@@ -120,7 +126,7 @@ def get_token_stats(db: Session, days: int = 30) -> dict:
         if day not in daily:
             daily[day] = 0
         daily[day] += log.cost_usd
-    
+
     return {
         "total_input": total_input,
         "total_output": total_output,
@@ -129,6 +135,58 @@ def get_token_stats(db: Session, days: int = 30) -> dict:
         "by_model": by_model,
         "daily": daily
     }
+
+
+def ensure_seed_projects(db: Session):
+    """Load project definitions from projects_seed.json if DB is empty."""
+    if db.query(Project).count() > 0:
+        return
+
+    seed_path = os.path.join(os.path.dirname(__file__), "projects_seed.json")
+    if not os.path.exists(seed_path):
+        return
+
+    with open(seed_path, "r", encoding="utf-8") as f:
+        seed_projects = json.load(f)
+
+    for item in seed_projects:
+        db.add(Project(
+            id=item["id"],
+            name=item["name"],
+            repo=item["repo"],
+            color=item.get("color", "#339af0"),
+            status=item.get("status", "planning"),
+            priority=item.get("priority", "medium"),
+            purpose=item.get("purpose", ""),
+            tech_stack=item.get("tech_stack", ""),
+            todo_list=item.get("todo_list", ""),
+            notes=item.get("notes", ""),
+            memory_file=item.get("memory_file", ""),
+        ))
+    db.commit()
+
+
+def get_gateway_status() -> dict:
+    """Best-effort OpenClaw gateway status using configured URL/token."""
+    if not GATEWAY_URL:
+        return {"ok": False, "reason": "OPENCLAW_GATEWAY_URL not set"}
+
+    url = GATEWAY_URL.rstrip("/") + "/status"
+    headers = {"accept": "application/json"}
+    if GATEWAY_TOKEN:
+        headers["authorization"] = f"Bearer {GATEWAY_TOKEN}"
+
+    try:
+        req = urlrequest.Request(url, headers=headers, method="GET")
+        with urlrequest.urlopen(req, timeout=5) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+            return {"ok": True, "status": payload}
+    except HTTPError as e:
+        return {"ok": False, "reason": f"HTTP {e.code}"}
+    except URLError as e:
+        return {"ok": False, "reason": str(e.reason)}
+    except Exception as e:
+        return {"ok": False, "reason": str(e)}
 
 
 # Web routes
@@ -159,6 +217,7 @@ def logout():
 @app.get("/", response_class=HTMLResponse)
 def dashboard(request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
     """Dashboard home."""
+    ensure_seed_projects(db)
     agent_status = get_agent_status(db)
     task_stats = get_task_stats(db)
     token_stats = get_token_stats(db, days=30)
@@ -202,9 +261,9 @@ def tokens_page(request: Request, db: Session = Depends(get_db), user: str = Dep
     """Token tracker page."""
     stats = get_token_stats(db, days=30)
     logs = db.query(TokenLog).order_by(TokenLog.timestamp.desc()).limit(100).all()
-    
+
     budget_percent = (stats["total_cost"] / MONTHLY_BUDGET_USD) * 100 if MONTHLY_BUDGET_USD > 0 else 0
-    
+
     return templates.TemplateResponse("tokens.html", {
         "request": request,
         "stats": stats,
@@ -214,6 +273,36 @@ def tokens_page(request: Request, db: Session = Depends(get_db), user: str = Dep
         "budget_percent": round(budget_percent, 1),
         "budget_warning": budget_percent >= 80,
         "budget_critical": budget_percent >= 95
+    })
+
+
+@app.get("/projects", response_class=HTMLResponse)
+def projects_page(request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+    """Projects overview page."""
+    ensure_seed_projects(db)
+    projects = db.query(Project).order_by(Project.priority.desc(), Project.name.asc()).all()
+    return templates.TemplateResponse("projects.html", {
+        "request": request,
+        "projects": [p.to_dict() for p in projects],
+        "gateway": get_gateway_status(),
+    })
+
+
+@app.get("/projects/{project_id}", response_class=HTMLResponse)
+def project_detail_page(project_id: str, request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+    """Project detail page."""
+    ensure_seed_projects(db)
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    project_tasks = db.query(Task).filter(Task.project == project.name).order_by(Task.updated_at.desc()).all()
+
+    return templates.TemplateResponse("project_detail.html", {
+        "request": request,
+        "project": project.to_dict(),
+        "tasks": [t.to_dict() for t in project_tasks],
+        "gateway": get_gateway_status(),
     })
 
 
@@ -299,6 +388,12 @@ def log_tokens_api(data: TokenLogCreate, db: Session = Depends(get_db)):
 def token_summary_api(db: Session = Depends(get_db), user: str = Depends(get_current_user)):
     """Get token usage summary."""
     return get_token_stats(db, days=30)
+
+
+@app.get("/api/gateway/status")
+def gateway_status_api(user: str = Depends(get_current_user)):
+    """Expose configured OpenClaw gateway status for dashboard monitoring."""
+    return get_gateway_status()
 
 
 if __name__ == "__main__":

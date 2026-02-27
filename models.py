@@ -1,6 +1,6 @@
 """Database models."""
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Float, DateTime, Enum
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text
 from database import Base
 import enum
 
@@ -68,16 +68,51 @@ class TokenLog(Base):
 
 class AgentStatus(Base):
     __tablename__ = "agent_status"
-    
+
     id = Column(Integer, primary_key=True)
     agent_name = Column(String, default="Lobster")
     agent_email = Column(String, default="agent@lobster.local")
     last_heartbeat = Column(DateTime, default=datetime.utcnow)
-    
+
     def to_dict(self):
         return {
             "agent_name": self.agent_name,
             "agent_email": self.agent_email,
             "last_heartbeat": self.last_heartbeat.isoformat() if self.last_heartbeat else None,
             "last_heartbeat_human": self.last_heartbeat.strftime("%Y-%m-%d %H:%M UTC") if self.last_heartbeat else "Never"
+        }
+
+
+class Project(Base):
+    __tablename__ = "projects"
+
+    id = Column(String, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    repo = Column(String, nullable=False)
+    color = Column(String, default="#339af0")
+    status = Column(String, default="planning")
+    priority = Column(String, default="medium")
+    purpose = Column(Text, default="")
+    tech_stack = Column(Text, default="")
+    todo_list = Column(Text, default="")
+    notes = Column(Text, default="")
+    memory_file = Column(String, default="")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "repo": self.repo,
+            "color": self.color,
+            "status": self.status,
+            "priority": self.priority,
+            "purpose": self.purpose,
+            "tech_stack": [s.strip() for s in (self.tech_stack or "").split(",") if s.strip()],
+            "todo_list": [s.strip() for s in (self.todo_list or "").split("\n") if s.strip()],
+            "notes": self.notes,
+            "memory_file": self.memory_file,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
