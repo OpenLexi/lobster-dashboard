@@ -210,6 +210,7 @@ def tokens_page(request: Request, db: Session = Depends(get_db), user: str = Dep
         "stats": stats,
         "logs": logs,
         "monthly_budget": MONTHLY_BUDGET_USD,
+        "budget_used": stats["total_cost"],
         "budget_percent": round(budget_percent, 1),
         "budget_warning": budget_percent >= 80,
         "budget_critical": budget_percent >= 95
