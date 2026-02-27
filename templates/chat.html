@@ -60,17 +60,32 @@ form.addEventListener('submit', async (e) => {
   const body = bodyEl.value.trim();
   if (!body) return;
 
-  const res = await fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sender, body })
-  });
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender, body })
+    });
 
-  if (res.ok) {
+    if (!res.ok) {
+      const txt = await res.text();
+      alert(`Chat send failed (${res.status}). ${txt.slice(0, 160)}`);
+      return;
+    }
+
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const txt = await res.text();
+      alert(`Chat send failed: expected JSON response. Got: ${txt.slice(0, 120)}`);
+      return;
+    }
+
     const msg = await res.json();
     renderMessage(msg);
     bodyEl.value = '';
     bodyEl.focus();
+  } catch (err) {
+    alert(`Chat send error: ${err.message}`);
   }
 });
 
