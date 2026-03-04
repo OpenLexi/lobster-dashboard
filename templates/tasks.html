@@ -32,7 +32,10 @@
                     <span style="font-size: 0.75rem; color: var(--text-muted);">
                         {{ task.created_at.strftime('%Y-%m-%d') }}
                     </span>
-                    <button class="btn btn-secondary" style="margin-left:auto; padding:0.15rem 0.4rem; font-size:.75rem;" onclick="deleteTask({{ task.id }}, event)">Delete</button>
+                    {% if status_name == 'proposed' %}
+                    <button class="btn btn-primary" style="margin-left:auto; padding:0.15rem 0.4rem; font-size:.75rem;" onclick="approveTask({{ task.id }}, event)">Approve</button>
+                    {% endif %}
+                    <button class="btn btn-secondary" style="padding:0.15rem 0.4rem; font-size:.75rem;" onclick="deleteTask({{ task.id }}, event)">Delete</button>
                 </div>
             </div>
             {% endfor %}
@@ -152,6 +155,29 @@ function createTask(event) {
     }).catch(error => {
         console.error('Error:', error);
         alert('Failed to create task');
+    });
+}
+
+function approveTask(taskId, event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    fetch(`/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'approved' })
+    }).then(async response => {
+        if (response.ok) {
+            location.reload();
+        } else {
+            const txt = await response.text();
+            alert(`Failed to approve task (${response.status}). ${txt.slice(0, 140)}`);
+        }
+    }).catch(error => {
+        console.error('Error:', error);
+        alert('Failed to approve task');
     });
 }
 

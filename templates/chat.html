@@ -8,9 +8,9 @@
 <div class="card" style="margin-bottom: 1rem;">
     <div id="chat-log" style="max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: .5rem;">
         {% for m in messages %}
-        <div style="padding:.6rem .75rem; background:#1f2937; border-radius:.5rem;">
-            <div style="font-size:.8rem; color:#9ca3af; margin-bottom:.2rem;">{{ m.sender }} · {{ m.created_at[:19].replace('T',' ') }}</div>
-            <div>{{ m.body }}</div>
+        <div style="padding:.6rem .75rem; background:var(--bg-tertiary); border:1px solid var(--border); border-radius:.5rem; color:var(--text-primary);">
+            <div style="font-size:.8rem; color:var(--text-muted); margin-bottom:.2rem;">{{ m.sender }} · {{ m.created_at[:19].replace('T',' ') }}</div>
+            <div style="color:var(--text-primary);">{{ m.body }}</div>
         </div>
         {% endfor %}
     </div>
@@ -35,12 +35,14 @@ const log = document.getElementById('chat-log');
 function renderMessage(m) {
   const box = document.createElement('div');
   box.style.padding = '.6rem .75rem';
-  box.style.background = '#1f2937';
+  box.style.background = 'var(--bg-tertiary)';
+  box.style.border = '1px solid var(--border)';
   box.style.borderRadius = '.5rem';
+  box.style.color = 'var(--text-primary)';
 
   const meta = document.createElement('div');
   meta.style.fontSize = '.8rem';
-  meta.style.color = '#9ca3af';
+  meta.style.color = 'var(--text-muted)';
   meta.style.marginBottom = '.2rem';
   meta.textContent = `${m.sender} · ${m.created_at.replace('T', ' ').slice(0, 19)}`;
 
