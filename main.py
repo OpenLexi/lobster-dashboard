@@ -6,7 +6,6 @@ import json
 from urllib import request as urlrequest
 from urllib.error import URLError, HTTPError
 
-import httpx
 
 from fastapi import FastAPI, Request, Response, Depends, HTTPException, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
@@ -31,7 +30,6 @@ templates.env.globals["max"] = max
 
 GATEWAY_URL = os.getenv("OPENCLAW_GATEWAY_URL", "")
 GATEWAY_TOKEN = os.getenv("OPENCLAW_GATEWAY_TOKEN", "")
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
 
 @app.get("/health")
@@ -267,39 +265,12 @@ def load_inbox_emails(limit: int = 100) -> List[dict]:
 
 
 def generate_lexi_reply(user_text: str) -> str:
-    """Generate Lexi reply with Anthropic when available; otherwise fallback."""
+    """Generate a deterministic local reply (Anthropic disabled by policy)."""
     prompt = (user_text or "").strip()[:3000]
     if not prompt:
         return "Got it — say a bit more and I’ll help from here."
 
-    if ANTHROPIC_API_KEY:
-        try:
-            with httpx.Client(timeout=20) as client:
-                r = client.post(
-                    "https://api.anthropic.com/v1/messages",
-                    headers={
-                        "x-api-key": ANTHROPIC_API_KEY,
-                        "anthropic-version": "2023-06-01",
-                        "content-type": "application/json",
-                    },
-                    json={
-                        "model": "claude-3-5-haiku-latest",
-                        "max_tokens": 220,
-                        "system": "You are Lexi, an engineering assistant in a private dashboard chat with Jesse. Reply clearly, warmly, and briefly.",
-                        "messages": [{"role": "user", "content": prompt}],
-                    },
-                )
-                r.raise_for_status()
-                data = r.json()
-                blocks = data.get("content", [])
-                text_parts = [b.get("text", "") for b in blocks if isinstance(b, dict) and b.get("type") == "text"]
-                reply = "\n".join([t.strip() for t in text_parts if t.strip()]).strip()
-                if reply:
-                    return reply[:3000]
-        except Exception:
-            pass
-
-    return f"I got your message: \"{prompt[:200]}\". I’m online here now — tell me what you want me to do next and I’ll execute."
+    return f"Got it. I received: \"{prompt[:200]}\". I’m here and ready — tell me the next action and I’ll run it." 
 
 # Web routes
 @app.get("/login", response_class=HTMLResponse)
