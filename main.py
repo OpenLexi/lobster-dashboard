@@ -30,6 +30,7 @@ templates.env.globals["max"] = max
 
 GATEWAY_URL = os.getenv("OPENCLAW_GATEWAY_URL", "")
 GATEWAY_TOKEN = os.getenv("OPENCLAW_GATEWAY_TOKEN", "")
+SIGNOZ_DASHBOARD_URL = os.getenv("SIGNOZ_DASHBOARD_URL", "")
 
 
 @app.get("/health")
@@ -423,6 +424,15 @@ def inbox_page(request: Request, user: str = Depends(get_current_user)):
 def live_chat_page(request: Request, user: str = Depends(get_current_user)):
     """Embed OpenClaw native chat for the main session."""
     return templates.TemplateResponse("live_chat.html", {"request": request})
+
+
+@app.get("/observability", response_class=HTMLResponse)
+def observability_page(request: Request, user: str = Depends(get_current_user)):
+    """SigNoz observability page."""
+    return templates.TemplateResponse("observability.html", {
+        "request": request,
+        "signoz_url": SIGNOZ_DASHBOARD_URL,
+    })
 
 
 @app.get("/api/inbox")
