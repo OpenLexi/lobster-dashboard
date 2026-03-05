@@ -8,7 +8,7 @@ from urllib.error import URLError, HTTPError
 
 
 from fastapi import FastAPI, Request, Response, Depends, HTTPException, Form
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -434,6 +434,26 @@ def observability_page(request: Request, user: str = Depends(get_current_user)):
         "signoz_url": SIGNOZ_DASHBOARD_URL,
     })
 
+
+
+
+@app.get("/observability/signoz-template")
+def signoz_template_download(user: str = Depends(get_current_user)):
+    """Download the bundled SigNoz OpenClaw dashboard template JSON."""
+    path = os.path.join(os.path.dirname(__file__), "observability", "signoz", "openclaw-monitoring-with-opentelemetry.json")
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Template not found")
+    return FileResponse(path, media_type="application/json", filename="openclaw-monitoring-with-opentelemetry.json")
+
+
+@app.get("/api/observability/status")
+def observability_status(user: str = Depends(get_current_user)):
+    """Expose current OTel config surface for dashboard observability page."""
+    return {
+        "otel_enabled": True,
+        "signoz_dashboard_url": SIGNOZ_DASHBOARD_URL,
+        "template_path": "/observability/signoz-template",
+    }
 
 @app.get("/api/inbox")
 def list_inbox_api(user: str = Depends(get_current_user)):
