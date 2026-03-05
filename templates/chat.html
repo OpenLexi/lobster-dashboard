@@ -8,7 +8,7 @@
 <div class="card" style="margin-bottom: 1rem;">
     <div id="chat-log" style="max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: .5rem;">
         {% for m in messages %}
-        <div style="padding:.6rem .75rem; background:var(--bg-tertiary); border:1px solid var(--border); border-radius:.5rem; color:var(--text-primary);">
+        <div data-message-id="{{ m.id }}" style="padding:.6rem .75rem; background:var(--bg-tertiary); border:1px solid var(--border); border-radius:.5rem; color:var(--text-primary);">
             <div style="font-size:.8rem; color:var(--text-muted); margin-bottom:.2rem;">{{ m.sender }} · {{ m.created_at[:19].replace('T',' ') }}</div>
             <div style="color:var(--text-primary);">{{ m.body }}</div>
         </div>
@@ -55,6 +55,53 @@ function renderMessage(m) {
   log.scrollTop = log.scrollHeight;
 }
 
+let lastSeenId = 0;
+
+function trackSeenFromDom() {
+  const cards = Array.from(log.querySelectorAll('[data-message-id]'));
+  for (const c of cards) {
+    const id = Number(c.getAttribute('data-message-id') || '0');
+    if (id > lastSeenId) lastSeenId = id;
+  }
+}
+
+function renderMessageWithId(m) {
+  const box = document.createElement('div');
+  box.setAttribute('data-message-id', String(m.id || ''));
+  box.style.padding = '.6rem .75rem';
+  box.style.background = 'var(--bg-tertiary)';
+  box.style.border = '1px solid var(--border)';
+  box.style.borderRadius = '.5rem';
+  box.style.color = 'var(--text-primary)';
+
+  const meta = document.createElement('div');
+  meta.style.fontSize = '.8rem';
+  meta.style.color = 'var(--text-muted)';
+  meta.style.marginBottom = '.2rem';
+  meta.textContent = `${m.sender} · ${(m.created_at || '').replace('T', ' ').slice(0, 19)}`;
+
+  const body = document.createElement('div');
+  body.textContent = m.body;
+
+  box.appendChild(meta);
+  box.appendChild(body);
+  log.appendChild(box);
+  log.scrollTop = log.scrollHeight;
+  if ((m.id || 0) > lastSeenId) lastSeenId = m.id;
+}
+
+async function pollNewMessages() {
+  try {
+    const res = await fetch('/api/chat');
+    if (!res.ok) return;
+    const all = await res.json();
+    const fresh = (all || []).filter(m => (m.id || 0) > lastSeenId);
+    fresh.forEach(renderMessageWithId);
+  } catch (_) {
+    // silent
+  }
+}
+
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const sender = document.getElementById('sender').value || 'Jesse';
@@ -75,15 +122,9 @@ form.addEventListener('submit', async (e) => {
       return;
     }
 
-    const contentType = res.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) {
-      const txt = await res.text();
-      alert(`Chat send failed: expected JSON response. Got: ${txt.slice(0, 120)}`);
-      return;
-    }
-
-    const msg = await res.json();
-    renderMessage(msg);
+    const payload = await res.json();
+    if (payload.message) renderMessageWithId(payload.message);
+    if (payload.reply) renderMessageWithId(payload.reply);
     bodyEl.value = '';
     bodyEl.focus();
   } catch (err) {
@@ -91,6 +132,9 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
+// initialize seen ids from server-rendered DOM then poll
+trackSeenFromDom();
+setInterval(pollNewMessages, 3000);
 log.scrollTop = log.scrollHeight;
 </script>
 {% endblock %}
