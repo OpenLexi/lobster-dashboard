@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Live Chat - Lobster Dashboard{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1rem;">Live Chat (OpenClaw Native)</h1>
+
+<div class="alert alert-warning" style="margin-bottom:1rem;">
+    This view embeds OpenClaw's native chat UI for the main session.
+</div>
+
+<div class="card" style="padding:0; overflow:hidden;">
+    <iframe
+        src="http://127.0.0.1:18789/chat?session=agent%3Amain%3Amain"
+        style="width:100%; height:78vh; border:0; background:#111;"
+        title="OpenClaw Chat"
+    ></iframe>
+</div>
+
+<p style="margin-top:.75rem; color:var(--text-muted); font-size:.9rem;">
+If the embed is blank, open the same URL directly in a new tab.
+</p>
+{% endblock %}

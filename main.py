@@ -419,6 +419,12 @@ def inbox_page(request: Request, user: str = Depends(get_current_user)):
     })
 
 
+@app.get("/live-chat", response_class=HTMLResponse)
+def live_chat_page(request: Request, user: str = Depends(get_current_user)):
+    """Embed OpenClaw native chat for the main session."""
+    return templates.TemplateResponse("live_chat.html", {"request": request})
+
+
 @app.get("/api/inbox")
 def list_inbox_api(user: str = Depends(get_current_user)):
     """JSON API for inbox data shown in dashboard."""
