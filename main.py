@@ -228,6 +228,41 @@ def get_gateway_status() -> dict:
         return {"ok": False, "reason": str(e)}
 
 
+def load_inbox_emails(limit: int = 100) -> List[dict]:
+    """Load inbound email webhook JSON files from ~/.openclaw/inbox."""
+    inbox_dir = os.path.expanduser("~/.openclaw/inbox")
+    if not os.path.isdir(inbox_dir):
+        return []
+
+    items = []
+    for name in os.listdir(inbox_dir):
+        if not name.endswith(".json") or name == ".processed-emails.json":
+            continue
+        path = os.path.join(inbox_dir, name)
+        if not os.path.isfile(path):
+            continue
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                payload = json.load(f)
+            data = payload.get("data", {})
+            body = payload.get("body", {})
+            text = (body.get("text") or "").strip()
+            items.append({
+                "file": name,
+                "email_id": data.get("email_id", ""),
+                "subject": data.get("subject", "(no subject)"),
+                "from": data.get("from", ""),
+                "created_at": data.get("created_at") or payload.get("created_at"),
+                "to": data.get("to", []),
+                "text_preview": text[:800],
+            })
+        except Exception:
+            continue
+
+    items.sort(key=lambda x: x.get("created_at") or "", reverse=True)
+    return items[:limit]
+
+
 # Web routes
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
@@ -355,6 +390,23 @@ def chat_page(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "messages": [m.to_dict() for m in messages],
     })
+
+
+@app.get("/inbox", response_class=HTMLResponse)
+def inbox_page(request: Request, user: str = Depends(get_current_user)):
+    """Inbox page: shows received email webhooks from local OpenClaw inbox."""
+    emails = load_inbox_emails(limit=200)
+    return templates.TemplateResponse("inbox.html", {
+        "request": request,
+        "emails": emails,
+        "email_count": len(emails),
+    })
+
+
+@app.get("/api/inbox")
+def list_inbox_api(user: str = Depends(get_current_user)):
+    """JSON API for inbox data shown in dashboard."""
+    return load_inbox_emails(limit=200)
 
 
 # API routes

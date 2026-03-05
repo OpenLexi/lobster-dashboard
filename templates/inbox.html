@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Inbox - Lobster Dashboard{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+  <h1>Inbox</h1>
+  <span class="tag">{{ email_count }} messages</span>
+</div>
+
+{% if emails %}
+  <div style="display:flex; flex-direction:column; gap:0.75rem;">
+    {% for email in emails %}
+      <div class="card" style="padding:1rem;">
+        <div style="display:flex; justify-content:space-between; gap:1rem; align-items:flex-start;">
+          <div>
+            <div style="font-weight:700; margin-bottom:0.25rem;">{{ email.subject }}</div>
+            <div style="font-size:0.9rem; color:var(--text-secondary);">From: {{ email.from }}</div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">{{ email.created_at or 'Unknown time' }}</div>
+          </div>
+          <span class="tag">{{ email.file }}</span>
+        </div>
+        {% if email.text_preview %}
+          <pre style="white-space:pre-wrap; font-family:inherit; margin:0.75rem 0 0 0; color:var(--text-primary); background:var(--bg-secondary); padding:0.75rem; border-radius:8px;">{{ email.text_preview }}</pre>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card" style="padding:1rem;">No inbox messages yet.</div>
+{% endif %}
+{% endblock %}
