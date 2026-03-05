@@ -7,7 +7,9 @@ services:
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
-        value: sqlite:///./lobster.db
+        fromDatabase:
+          name: lobster-dashboard-db
+          property: connectionString
       - key: ADMIN_PASSWORD_HASH
         sync: false
       - key: SECRET_KEY
@@ -20,3 +22,8 @@ services:
         value: 500
       - key: ENV
         value: production
+
+databases:
+  - name: lobster-dashboard-db
+    databaseName: lobster_dashboard
+    user: lobster_dashboard
