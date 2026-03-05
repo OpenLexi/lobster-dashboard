@@ -127,22 +127,28 @@ def get_token_stats(db: Session, days: int = 30) -> dict:
     total_output = sum(log.output_tokens for log in logs)
     total_cost = sum(log.cost_usd for log in logs)
 
-    # By model
+    # By model/provider
     by_model = {}
     for log in logs:
         if log.model not in by_model:
-            by_model[log.model] = {"input": 0, "output": 0, "cost": 0}
+            by_model[log.model] = {"input": 0, "output": 0, "tokens": 0, "cost": 0.0, "count": 0}
         by_model[log.model]["input"] += log.input_tokens
         by_model[log.model]["output"] += log.output_tokens
+        by_model[log.model]["tokens"] += (log.input_tokens + log.output_tokens)
         by_model[log.model]["cost"] += log.cost_usd
+        by_model[log.model]["count"] += 1
 
-    # Daily breakdown
+    # Daily breakdown (cost + tokens)
     daily = {}
+    daily_tokens = {}
     for log in logs:
         day = log.timestamp.strftime("%Y-%m-%d")
         if day not in daily:
-            daily[day] = 0
+            daily[day] = 0.0
+        if day not in daily_tokens:
+            daily_tokens[day] = 0
         daily[day] += log.cost_usd
+        daily_tokens[day] += (log.input_tokens + log.output_tokens)
 
     return {
         "total_input": total_input,
@@ -150,7 +156,8 @@ def get_token_stats(db: Session, days: int = 30) -> dict:
         "total_cost": round(total_cost, 4),
         "count": len(logs),
         "by_model": by_model,
-        "daily": daily
+        "daily": daily,
+        "daily_tokens": daily_tokens,
     }
 
 

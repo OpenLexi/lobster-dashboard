@@ -56,16 +56,46 @@
 </div>
 
 <div class="card" style="margin: 2rem 0;">
-    <div class="card-title">Cost Breakdown by Model</div>
+    <div class="card-title">Token Breakdown by Model</div>
     <div class="chart-container">
         <canvas id="modelChart"></canvas>
     </div>
 </div>
 
 <div class="card" style="margin-bottom: 2rem;">
-    <div class="card-title">Daily Token Spend (30 Days)</div>
+    <div class="card-title">Daily Tokens (30 Days)</div>
     <div class="chart-container">
         <canvas id="dailyChart"></canvas>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-title">Usage by Model (30d)</div>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Model</th>
+                    <th>Runs</th>
+                    <th>Input</th>
+                    <th>Output</th>
+                    <th>Total Tokens</th>
+                    <th>Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for model, data in stats.by_model.items() %}
+                <tr>
+                    <td>{{ model }}</td>
+                    <td>{{ data.count }}</td>
+                    <td>{{ "{:,}".format(data.input) }}</td>
+                    <td>{{ "{:,}".format(data.output) }}</td>
+                    <td><strong>{{ "{:,}".format(data.tokens) }}</strong></td>
+                    <td>${{ "%.6f"|format(data.cost) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -106,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Model breakdown chart
     const modelData = {{ stats.by_model|tojson }};
     const models = Object.keys(modelData);
-    const modelCosts = models.map(model => modelData[model].cost);
+    const modelTokens = models.map(model => modelData[model].tokens || (modelData[model].input + modelData[model].output));
     
     const modelCtx = document.getElementById('modelChart').getContext('2d');
     new Chart(modelCtx, {
@@ -114,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
         data: {
             labels: models,
             datasets: [{
-                data: modelCosts,
+                data: modelTokens,
                 backgroundColor: [
                     '#ff6b6b',
                     '#ffd93d',
@@ -139,9 +169,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Daily spend chart
-    const dailyData = {{ stats.daily|tojson }};
+    const dailyData = {{ stats.daily_tokens|tojson }};
     const days = Object.keys(dailyData).sort();
-    const dailyCosts = days.map(day => dailyData[day]);
+    const dailyTotals = days.map(day => dailyData[day]);
     
     const dailyCtx = document.getElementById('dailyChart').getContext('2d');
     new Chart(dailyCtx, {
@@ -149,8 +179,8 @@ document.addEventListener('DOMContentLoaded', function() {
         data: {
             labels: days,
             datasets: [{
-                label: 'Daily Cost ($)',
-                data: dailyCosts,
+                label: 'Daily Tokens',
+                data: dailyTotals,
                 backgroundColor: '#ff6b6b',
                 borderColor: '#ff6b6b',
                 borderWidth: 1
@@ -167,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     ticks: {
                         callback: function(value) {
-                            return '$' + value.toFixed(2);
+                            return value.toLocaleString();
                         }
                     }
                 },
