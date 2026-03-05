@@ -90,6 +90,9 @@ document.addEventListener('DOMContentLoaded', function() {
             group: 'tasks',
             animation: 150,
             ghostClass: 'dragging',
+            draggable: '.task-card',
+            filter: 'button, a, input, textarea, select',
+            preventOnFilter: false,
             onEnd: function(evt) {
                 const taskId = evt.item.dataset.taskId;
                 const newStatus = evt.to.parentElement.dataset.status;
